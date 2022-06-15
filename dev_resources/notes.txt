@@ -1,0 +1,37 @@
+Need to focus on the Automated Vault (Farm -> Automated Vaults):
+* Need to monitor:
+    - Vault TVL
+    - Capacity
+    - Current APY
+    - Rebalance History of the pool and amount
+    - cost basis
+    - current value
+    - profit/loss of the position
+* Harvest rewards
+* Close the position
+
+-> Start with the pool:
+https://app.alpacafinance.org/vault/n3x-bnbbusd-pcs1
+
+-> This API call allows us to monitor TVL, capacity, and APY:
+https://alpaca-static-api.alpacafinance.org/bsc/v1/landing/summary.json
+under the "strategyPools" key
+
+-> This API call allows us to get the entry price for all pools that a wallet address has entered.
+This data can be used for cost basis and profit/loss
+https://api.alpacafinance.org/bsc/v1/delta-neutral/avg-entry-prices?userAddress={wallet_address}
+e.g.
+https://api.alpacafinance.org/bsc/v1/delta-neutral/avg-entry-prices?userAddress=0x2DD872C6f7275DAD633d7Deb1083EDA561E9B96b
+
+-> Pool rebalance history can be retrieved from this subgraph:
+https://api.thegraph.com/subgraphs/name/alpaca-finance/automated-vault
+See the "subgraph_query.txt" file for Jessie's query example
+
+-> For the current value of the investment for each Automated Vault, I will need to retrieve this from the blockchain
+This is the list of all contract addresses for Automated Vault:
+https://github.com/alpaca-finance/bsc-alpaca-contract/blob/main/.mainnet.json
+Each AV is an ERC20 token of its own.
+So, you could call DeltaNeutralVault.balanceOf(userAddress) to get how many AV share token.
+Then you could call DeltaNeutralVault.balanceOf.shareToValue(amountOfShareToken) to get the USD value of those share tokens.
+
+-> Need to create a functionality example in jupyter notebook when finished

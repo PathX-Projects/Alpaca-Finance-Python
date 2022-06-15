@@ -1,0 +1,16 @@
+curl 'https://api.thegraph.com/subgraphs/name/alpaca-finance/automated-vault' \
+  -H 'authority: api.thegraph.com' \
+  -H 'accept: */*' \
+  -H 'accept-language: en-US,en;q=0.9' \
+  -H 'content-type: application/json' \
+  -H 'origin: https://app.alpacafinance.org' \
+  -H 'referer: https://app.alpacafinance.org/' \
+  -H 'sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="102", "Google Chrome";v="102"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-fetch-dest: empty' \
+  -H 'sec-fetch-mode: cors' \
+  -H 'sec-fetch-site: cross-site' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36' \
+  --data-raw '{"operationName":"rebalanceLogs","variables":{"vaultAddress":"0x8e5cfa7c06f187b56537f7f0cabfb55611af6f16"},"query":"query rebalanceLogs($vaultAddress: String) {\n  rebalanceLogs(\n    where: {vaultAddress: $vaultAddress}\n    orderBy: blockTime\n    orderDirection: desc\n  ) {\n    vaultAddress\n    blockTime\n    __typename\n  }\n}\n"}' \
+  --compressed
