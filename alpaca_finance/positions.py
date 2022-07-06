@@ -6,12 +6,15 @@ from .util import get_entry_prices
 
 
 class AutomatedVaultPosition:
-    def __init__(self, position_key: str, owner_wallet_address: str):
+    def __init__(self, position_key: str, owner_wallet_address: str, owner_wallet_key: str = None):
         summary = self.get_vault_summary(position_key.lower())
+
+        # Store position metadata
         self.position_key = summary['key']
         self.position_name = summary['name']
         self.position_address = summary['address'].lower()
 
+        # Store entry price for future calculations
         try:
             self.entry_price = int([record for record in get_entry_prices(owner_wallet_address)
                                     if record['strategyPoolAddress'].lower() == self.position_address][0]['avgEntryPrice'])
@@ -75,6 +78,8 @@ class AutomatedVaultPosition:
         pass
 
     def get_cost_basis(self):
+        # "shareTokenPrice" from self.get_vault_summary() may be useful
+
         pass
 
     def get_current_value(self):

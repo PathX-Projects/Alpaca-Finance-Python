@@ -1,8 +1,8 @@
 Need to focus on the Automated Vault (Farm -> Automated Vaults):
 * Need to monitor:
-    - Vault TVL
-    - Capacity
-    - Current APY
+    - Vault TVL - DONE (get_vault_summary())
+    - Capacity - DONE (get_vault_summary())
+    - Current APY - DONE (get_vault_summary())
     - Rebalance History of the pool and amount
     - cost basis
     - current value
@@ -35,3 +35,15 @@ So, you could call DeltaNeutralVault.balanceOf(userAddress) to get how many AV s
 Then you could call DeltaNeutralVault.balanceOf.shareToValue(amountOfShareToken) to get the USD value of those share tokens.
 
 -> Need to create a functionality example in jupyter notebook when finished
+
+-> Automated Vault Controller Contract:
+https://github.com/alpaca-finance/bsc-alpaca-contract/blob/main/solidity/contracts/8.13/AutomatedVaultController.sol
+
+-> DeltaNeutralVault interface containing shareToValue:
+https://github.com/alpaca-finance/bsc-alpaca-contract/blob/main/solidity/contracts/8.13/interfaces/IDeltaNeutralVault.sol
+
+-> Delta Neutral Oracle containing the following methods:
+https://github.com/alpaca-finance/bsc-alpaca-contract/blob/main/solidity/contracts/8.13/interfaces/IDeltaNeutralOracle.sol
+1. lpToDollar
+2. dollarToLp
+3. getTokenPrice
