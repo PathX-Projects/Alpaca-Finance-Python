@@ -154,3 +154,4 @@ cython_debug/
 # Project Specific:
 .DS_Store
 .idea
+testing.*

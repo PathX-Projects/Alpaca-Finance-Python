@@ -1,5 +1,5 @@
 import requests
-from web3 import Web3
+# from web3 import Web3
 from attrdict import AttrDict
 
 from .util import get_entry_prices
@@ -9,23 +9,23 @@ class AutomatedVaultPosition:
     def __init__(self, position_key: str, owner_wallet_address: str, owner_wallet_key: str = None):
         summary = self.get_vault_summary(position_key.lower())
 
-        # Store position metadata
-        self.position_key = summary['key']
-        self.position_name = summary['name']
-        self.position_address = summary['address'].lower()
+        self.owner_address = owner_wallet_address
+        self.owner_key = owner_wallet_key
 
-        # Store entry price for future calculations
-        try:
-            self.entry_price = int([record for record in get_entry_prices(owner_wallet_address)
-                                    if record['strategyPoolAddress'].lower() == self.position_address][0]['avgEntryPrice'])
-        except IndexError:
-            raise Exception(f"could not fetch entry price for position: {self.position_address}")
+        # Store position metadata
+        self.key = summary['key']
+        self.name = summary['name']
+        self.address = summary['address'].lower()
+
+    """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 
     def harvest_rewards(self):
-        pass
+        raise NotImplementedError
 
     def close_position(self):
-        pass
+        raise NotImplementedError
+
+    """ ---------------- Informational Methods (Private wallet key not required) ---------------- """
 
     def get_vault_summary(self, position_key: str = None) -> AttrDict:
         """
@@ -60,7 +60,7 @@ class AutomatedVaultPosition:
         """
         if position_key is None:
             try:
-                position_key = self.position_key
+                position_key = self.key
             except AttributeError:
                 raise ValueError("Could not fetch vault summary -> position key not supplied")
 
@@ -72,19 +72,54 @@ class AutomatedVaultPosition:
             if vault["key"].lower() == position_key:
                 return AttrDict(vault)
         else:
-            raise ValueError(f"Could not locate a vault with the key {self.position_key}")
+            raise ValueError(f"Could not locate a vault with the key {self.key}")
 
-    def get_rebalance_history(self):
+    def rebalance_history(self):
         pass
 
-    def get_cost_basis(self):
+    def yields(self) -> list[float, float, float, float]:
+        """
+        :return:
+            - current APR (excluding trading fee)
+            - current APY (excluding trading fee)
+            - current APR
+            - current APY
+        """
+        summary = self.get_vault_summary()
+        return [float(summary[key]) for key in ["aprTradingFeeExcluded", "apyTradingFeeExcluded", "apr", "apy"]]
+
+    def tvl(self) -> list[float, float]:
+        """
+        :return:
+            - TVL (total value locked)
+            - TVL Including Debt
+        """
+        summary = self.get_vault_summary()
+        return [float(summary[key]) for key in ["tvl", "tvlIncludingDebt"]]
+
+    def capacity(self) -> float:
+        return self.get_vault_summary().capacity
+
+    def cost_basis(self):
         # "shareTokenPrice" from self.get_vault_summary() may be useful
 
         pass
 
-    def get_current_value(self):
+    def current_value(self):
         pass
 
-    def get_pnl(self) -> float:
+    def pnl(self) -> float:
         """Returns the pnl for the current position in USD value"""
         pass
+
+    def entry_price(self) -> float:
+        try:
+            for data in get_entry_prices(self.owner_address):
+                if data['strategyPoolAddress'].lower() == self.address.lower():
+                    return float(data['avgEntryPrice'])
+            else:
+                raise IndexError
+        except IndexError:
+            raise Exception(f"could not fetch entry price for position: {self.address}")
+        except Exception as exc:
+            raise Exception(f"An error occurred when attempting to fetch entry price for position {self.name} - {exc}")
