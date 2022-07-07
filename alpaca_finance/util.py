@@ -2,10 +2,28 @@ from os.path import join, abspath, dirname
 from os import getcwd, pardir
 import json
 
-import requests
+from ._config import DEFAULT_BSC_RPC_URL
 
-def get_contract_instance(contract_address: str, abi_filename: str):
-    pass
+import requests
+from web3 import Web3
+
+
+def get_web3_provider(network_rpc_url: str) -> Web3:
+    """Returns a Web3 connection provider object"""
+    return Web3(Web3.HTTPProvider(network_rpc_url))
+
+
+def get_bsc_contract_instance(contract_address: str, abi_filename: str, w3_provider: Web3 = None):
+    if w3_provider is None:
+        w3_provider = get_web3_provider(DEFAULT_BSC_RPC_URL)
+
+    abi_storage_path = join(abspath(dirname(__file__)), "abi")
+    with open(join(abi_storage_path, abi_filename)) as json_file:
+        contract_abi = json.load(json_file)
+
+    contract_address = Web3.toChecksumAddress(contract_address)
+
+    return w3_provider.eth.contract(address=contract_address, abi=contract_abi)
 
 
 def get_entry_prices(wallet_address: str) -> list[dict]:
@@ -27,14 +45,6 @@ def format_json_file(filepath: str) -> None:
         data = json.load(infile)
         with open(filepath, 'w') as outfile:
             outfile.write(json.dumps(data, indent=2))
-
-
-def bep20_balance(address: str) -> float:
-    pass
-
-
-def bep20_decimals(address: str) -> int:
-    pass
 
 
 def store_abi(abi_url: str, abi_filename: str, abi_path: str = None) -> None:

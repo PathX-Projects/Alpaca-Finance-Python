@@ -1,12 +1,20 @@
-import requests
-# from web3 import Web3
-from attrdict import AttrDict
+from .util import get_entry_prices, get_bsc_contract_instance, get_web3_provider
+from ._config import DEFAULT_BSC_RPC_URL
+from .vault_contracts import DeltaNeutralVault, DeltaNeutralOracle, AutomatedVaultController
 
-from .util import get_entry_prices
+import requests
+from web3 import Web3
+from attrdict import AttrDict
+from bep20 import BEP20Token
 
 
 class AutomatedVaultPosition:
-    def __init__(self, position_key: str, owner_wallet_address: str, owner_wallet_key: str = None):
+    def __init__(self, position_key: str, owner_wallet_address: str, owner_wallet_key: str = None, w3_provider: Web3 = None):
+        if w3_provider is None:
+            self.w3_provider = get_web3_provider(DEFAULT_BSC_RPC_URL)
+        else:
+            self.w3_provider = w3_provider
+
         summary = self.get_vault_summary(position_key.lower())
 
         self.owner_address = owner_wallet_address
@@ -16,6 +24,13 @@ class AutomatedVaultPosition:
         self.key = summary['key']
         self.name = summary['name']
         self.address = summary['address'].lower()
+
+        self.working_token = summary['workingToken']
+
+        # Relevant contracts to control the vault and get data
+        self.oracle = DeltaNeutralOracle(self.w3_provider)
+        self.vault = DeltaNeutralVault(self.w3_provider)
+        self.controller = AutomatedVaultController(self.w3_provider)
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 
@@ -112,11 +127,18 @@ class AutomatedVaultPosition:
         """Returns the pnl for the current position in USD value"""
         pass
 
+    def shares(self) -> int:
+        return self.controller.getUserVaultShares(self.owner_address, self.address)
+
     def entry_price(self) -> float:
+        """CURRENTLY - Returns the entry share price in tokenB
+        To get current share price, use self.get_vault_summary()['shareTokenprice']
+        """
         try:
             for data in get_entry_prices(self.owner_address):
+                token = BEP20Token(self.working_token['tokenB']['address'])
                 if data['strategyPoolAddress'].lower() == self.address.lower():
-                    return float(data['avgEntryPrice'])
+                    return float(data['avgEntryPrice']) / 10 ** token.decimals()
             else:
                 raise IndexError
         except IndexError:
