@@ -34,7 +34,10 @@ class AutomatedVaultPosition:
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 
-    def harvest_rewards(self):
+    def invest(self):
+        raise NotImplementedError
+
+    def withdraw(self):
         raise NotImplementedError
 
     def close_position(self):
