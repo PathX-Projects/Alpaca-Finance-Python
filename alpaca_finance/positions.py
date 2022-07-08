@@ -131,7 +131,7 @@ class AutomatedVaultPosition:
         pass
 
     def shares(self) -> int:
-        return self.controller.getUserVaultShares(self.owner_address, self.address)
+        return self.vault.shares(self.owner_address)
 
     def entry_price(self) -> float:
         """CURRENTLY - Returns the entry share price in tokenB

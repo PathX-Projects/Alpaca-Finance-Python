@@ -31,6 +31,14 @@ class DeltaNeutralVault:
 
     def withdraw(self):
         pass
+    
+    def shares(self, user_address: str) -> int:
+        """Return the number of shares owned by the given user"""
+        return self.contract.functions.balanceOf(checksum(user_address)).call()
+    
+    def sharesToUSD(self, share_amount: int) -> int:
+        """Returns the value in USD for the given amount of vault shares"""
+        return self.contract.functions.sharesToUSD(share_amount).call()
 
 
 class AutomatedVaultController:
