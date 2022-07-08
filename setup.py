@@ -1,5 +1,8 @@
 from setuptools import setup, find_packages
+import sys
 
+if sys.version_info < (3, 9):
+    sys.exit('Python 3.9+ required to install this package. Install it here: https://www.python.org/downloads/')
 
 setup(
     name='alpaca_finance',
