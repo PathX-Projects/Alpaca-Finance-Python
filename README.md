@@ -90,6 +90,18 @@ How to use the package:
     # Get the current vault capacity:
     position.capacity()
 
+    # Get the position's cost basis (entry price in USD):
+    position.cost_basis()
+
+    # Get the current position value (in USD):
+    position.current_value()
+
+    # Get the position profit/loss (PnL in USD):
+    position.pnl()
+
+    # Get the amount of shares held and the USD value of all shares held:
+    position.shares()
+
     # get the full vault summary (See the documentation alpaca_fiance/positions.py for more details):
     position.get_vault_summary()
     ```
