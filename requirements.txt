@@ -1,3 +1,4 @@
 attrdict
 web3
 requests
+bep20
