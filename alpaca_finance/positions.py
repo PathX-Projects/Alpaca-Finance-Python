@@ -119,10 +119,6 @@ class AutomatedVaultPosition:
     def capacity(self) -> float:
         return self.get_vault_summary().capacity
 
-    def cost_basis(self) -> float:
-        """Returns the entry price of the position"""
-        return self.entry_price() * self.shares()[0]
-
     def current_value(self) -> float:
         """Returns the current position value in USD"""
         return self.shares()[1]
@@ -130,7 +126,7 @@ class AutomatedVaultPosition:
     def pnl(self) -> float:
         """Returns the pnl for the current position in USD value"""
         shares_vault, shares_usd = self.shares()
-        entry_value = self.entry_price() * shares_vault
+        entry_value = self.cost_basis() * shares_vault
 
         return shares_usd - entry_value
 
@@ -146,7 +142,7 @@ class AutomatedVaultPosition:
 
         return shares_int / 10 ** self.bep20_vault_token.decimals(), shares_usd
 
-    def entry_price(self) -> float:  # tuple[float, float]
+    def cost_basis(self) -> float:  # tuple[float, float]
         """CURRENTLY - Returns the entry share price (single share) in USD
         To get current share price, use self.get_vault_summary()['shareTokenprice']
 
@@ -163,6 +159,6 @@ class AutomatedVaultPosition:
                         entry_share_price = float(data['avgEntryPrice']) / 10 ** bep20_b_token.decimals()
                         entry_share_price_usd = self.oracle.getTokenPrice(bep20_b_token.address) * entry_share_price
 
-                    return entry_share_price_usd
+                    return entry_share_price_usd * self.shares()[0]
         except Exception as exc:
             raise Exception(f"An error occurred when attempting to fetch entry price for position {self.name} - {exc}")
