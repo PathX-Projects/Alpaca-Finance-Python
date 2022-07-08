@@ -5,8 +5,8 @@ Need to focus on the Automated Vault (Farm -> Automated Vaults):
     - Current APY - DONE (get_vault_summary())
     - Rebalance History of the pool and amount
     - cost basis
-    - current value
-    - profit/loss of the position
+    - current value - DONE (current_value())
+    - profit/loss of the position - DONE (pnl())
 * Harvest rewards
 * Close the position
 

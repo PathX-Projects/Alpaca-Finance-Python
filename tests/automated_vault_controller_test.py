@@ -13,4 +13,5 @@ if __name__ == "__main__":
 
     for pool in requests.get("https://alpaca-static-api.alpacafinance.org/bsc/v1/landing/summary.json").json()['data']['strategyPools']:
         print(pool['name'], "Shares:", controller.getUserVaultShares(WALLET_ADDRESS, pool['address']))
+        print(pool['workingToken']['symbol'])
 

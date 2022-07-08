@@ -25,8 +25,8 @@ class DeltaNeutralOracle:
 
 
 class DeltaNeutralVault:
-    def __init__(self, w3_provider: Web3 = None):
-        self.contract = get_bsc_contract_instance(contract_address=DELTA_NEUTRAL_VAULT_ADDRESS,
+    def __init__(self, vault_address: str, w3_provider: Web3 = None):
+        self.contract = get_bsc_contract_instance(contract_address=vault_address,
                                                   abi_filename="DeltaNeutralVault.json", w3_provider=w3_provider)
 
     def withdraw(self):
@@ -38,7 +38,7 @@ class DeltaNeutralVault:
     
     def sharesToUSD(self, share_amount: int) -> int:
         """Returns the value in USD for the given amount of vault shares"""
-        return self.contract.functions.sharesToUSD(share_amount).call()
+        return self.contract.functions.shareToValue(share_amount).call()
 
 
 class AutomatedVaultController:

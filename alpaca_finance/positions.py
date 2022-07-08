@@ -24,12 +24,13 @@ class AutomatedVaultPosition:
         self.key = summary['key']
         self.name = summary['name']
         self.address = summary['address'].lower()
-
+        self.vault_type = "neutral" if self.key.startswith("n") else "long/savings"
+        self.bep20_vault_token = BEP20Token(self.address, self.w3_provider)
         self.working_token = summary['workingToken']
 
         # Relevant contracts to control the vault and get data
         self.oracle = DeltaNeutralOracle(self.w3_provider)
-        self.vault = DeltaNeutralVault(self.w3_provider)
+        self.vault = DeltaNeutralVault(self.address, self.w3_provider)
         self.controller = AutomatedVaultController(self.w3_provider)
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
@@ -118,33 +119,50 @@ class AutomatedVaultPosition:
     def capacity(self) -> float:
         return self.get_vault_summary().capacity
 
-    def cost_basis(self):
-        # "shareTokenPrice" from self.get_vault_summary() may be useful
-
-        pass
+    def cost_basis(self) -> float:
+        """Returns the entry price of the position"""
+        return self.entry_price() * self.shares()[0]
 
     def current_value(self):
-        pass
+        """Returns the current position value in USD"""
+        return self.shares()[1]
 
     def pnl(self) -> float:
         """Returns the pnl for the current position in USD value"""
-        pass
+        shares_vault, shares_usd = self.shares()
+        entry_value = self.entry_price() * shares_vault
 
-    def shares(self) -> int:
-        return self.vault.shares(self.owner_address)
+        return shares_usd - entry_value
 
-    def entry_price(self) -> float:
-        """CURRENTLY - Returns the entry share price in tokenB
+    def shares(self) -> tuple[float, float]:
+        """
+        Returns the amount of vault shares held in the position, and the value of the shares in USD
+        The share value in USD is also the position value as shown on the webapp.
+
+        :return: (vault_shares, vault_shares_usd)
+        """
+        shares_int = self.vault.shares(self.owner_address)
+        shares_usd = self.vault.sharesToUSD(shares_int) / 10 ** 18
+
+        return shares_int / 10 ** self.bep20_vault_token.decimals(), shares_usd
+
+    def entry_price(self) -> float:  # tuple[float, float]
+        """CURRENTLY - Returns the entry share price (single share) in USD
         To get current share price, use self.get_vault_summary()['shareTokenprice']
+
+        :return: entry_share_price_usd
         """
         try:
             for data in get_entry_prices(self.owner_address):
-                token = BEP20Token(self.working_token['tokenB']['address'])
                 if data['strategyPoolAddress'].lower() == self.address.lower():
-                    return float(data['avgEntryPrice']) / 10 ** token.decimals()
-            else:
-                raise IndexError
-        except IndexError:
-            raise Exception(f"could not fetch entry price for position: {self.address}")
+                    if self.vault_type == "neutral":
+                        entry_share_price = float(data['avgEntryPrice']) / 10 ** 18
+                        entry_share_price_usd = entry_share_price
+                    else:
+                        bep20_b_token = BEP20Token(self.working_token['tokenB']['address'], self.w3_provider)
+                        entry_share_price = float(data['avgEntryPrice']) / 10 ** bep20_b_token.decimals()
+                        entry_share_price_usd = self.oracle.getTokenPrice(bep20_b_token.address) * entry_share_price
+
+                    return entry_share_price_usd
         except Exception as exc:
             raise Exception(f"An error occurred when attempting to fetch entry price for position {self.name} - {exc}")
