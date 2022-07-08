@@ -123,7 +123,7 @@ class AutomatedVaultPosition:
         """Returns the entry price of the position"""
         return self.entry_price() * self.shares()[0]
 
-    def current_value(self):
+    def current_value(self) -> float:
         """Returns the current position value in USD"""
         return self.shares()[1]
 
