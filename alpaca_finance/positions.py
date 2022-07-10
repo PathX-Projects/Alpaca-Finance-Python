@@ -35,8 +35,9 @@ class AutomatedVaultPosition:
         self.controller = AutomatedVaultController(self.w3_provider)
         self.gateway = DeltaNeutralVaultGateway(get_vault_addresses(self.address)['gateway'], self.w3_provider)
 
-        # Set the stable token for reference
-        self.stable_token = BEP20Token(self.vault.stableTokenAddress())
+        # Set the vault tokens for reference
+        self.stable_token = BEP20Token(self.vault.stableTokenAddress(), self.w3_provider)
+        self.asset_token = BEP20Token(self.vault.assetTokenAddress(), self.w3_provider)
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 

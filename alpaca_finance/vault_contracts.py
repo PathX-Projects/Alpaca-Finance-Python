@@ -46,6 +46,10 @@ class DeltaNeutralVault:
         """Returns the address for the delta vault stable token"""
         return self.contract.functions.stableToken().call()
 
+    def assetTokenAddress(self) -> str:
+        """Returns the address for the delta vault stable token"""
+        return self.contract.functions.assetToken().call()
+
 
 class DeltaNeutralVaultGateway:
     def __init__(self, gateway_address: str, w3_provider: Web3 = None):
