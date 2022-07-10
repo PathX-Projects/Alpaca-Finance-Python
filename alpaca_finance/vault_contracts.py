@@ -3,6 +3,7 @@ from ._config import DELTA_NEUTRAL_ORACLE_ADDRESS, DELTA_NEUTRAL_VAULT_ADDRESS, 
 
 from web3 import Web3
 from bep20.util import checksum
+from bep20 import BEP20Token
 
 
 class DeltaNeutralOracle:
@@ -29,8 +30,9 @@ class DeltaNeutralVault:
         self.contract = get_bsc_contract_instance(contract_address=vault_address,
                                                   abi_filename="DeltaNeutralVault.json", w3_provider=w3_provider)
 
-    def withdraw(self):
-        pass
+    def withdraw(self, shares: int):
+        # Slippage = 0%
+        return self.contract.functions.withdraw(shares, 0, 0, 0).call()
     
     def shares(self, user_address: str) -> int:
         """Return the number of shares owned by the given user"""
@@ -39,6 +41,19 @@ class DeltaNeutralVault:
     def sharesToUSD(self, share_amount: int) -> int:
         """Returns the value in USD for the given amount of vault shares"""
         return self.contract.functions.shareToValue(share_amount).call()
+
+    def stableTokenAddress(self) -> str:
+        """Returns the address for the delta vault stable token"""
+        return self.contract.functions.stableToken().call()
+
+
+class DeltaNeutralVaultGateway:
+    def __init__(self, gateway_address: str, w3_provider: Web3 = None):
+        self.contract = get_bsc_contract_instance(contract_address=gateway_address,
+                                                  abi_filename="DeltaNeutralVaultGateway.json", w3_provider=w3_provider)
+
+    def withdraw(self):
+        pass
 
 
 class AutomatedVaultController:

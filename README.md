@@ -58,7 +58,7 @@ How to use the package:
     ```python
     from alpaca_finance.util import get_web3_provider
 
-    provider = get_provider("your_rpc_url")
+    provider = get_web3_provider("your_rpc_url")
     ```
 
 ### Automated Vaults:

@@ -60,3 +60,9 @@ def store_abi(abi_url: str, abi_filename: str, abi_path: str = None) -> None:
     path = join(join(dirname(__file__)), "abi", abi_filename) if abi_path is None else abi_path
     with open(path, "w") as json_file:
         json_file.write(json.dumps(contract_abi, indent=2))
+
+
+def get_vault_addresses(vault_address: str) -> dict:
+    for r in requests.get("https://raw.githubusercontent.com/alpaca-finance/bsc-alpaca-contract/main/.mainnet.json").json()['DeltaNeutralVaults']:
+        if r['address'].lower() == vault_address.lower():
+            return r
