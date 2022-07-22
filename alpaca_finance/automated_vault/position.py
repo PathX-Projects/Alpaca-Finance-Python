@@ -231,8 +231,8 @@ class AutomatedVaultPosition:
             return receipt
 
     @staticmethod
-    def to_wei(amt: int, decimals: int) -> int:
-        return amt * (10 ** decimals)
+    def to_wei(amt: float, decimals: int) -> int:
+        return int(amt * (10 ** decimals))
 
     @staticmethod
     def from_wei(amt: int, decimals: int) -> int:
