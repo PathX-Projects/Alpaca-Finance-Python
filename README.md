@@ -63,7 +63,7 @@ How to use the package:
 
 ### Automated Vaults:
 
-3. Creating an [AutomatedVaultPosition](alpaca_finance/positions.py) instance requires the following:
+3. Creating an [AutomatedVaultPosition](alpaca_finance/automated_vault/positions.py) instance requires the following:
     - Your position key (string)
         - This key should match your position key on Alpaca Finance's webapp
         - ![demo](img/demo.png)
@@ -102,7 +102,7 @@ How to use the package:
     # Get the amount of shares held and the USD value of all shares held:
     position.shares()
 
-    # get the full vault summary (See the documentation alpaca_fiance/positions.py for more details):
+    # get the full vault summary (See the documentation alpaca_fiance/position.py for more details):
     position.get_vault_summary()
     ```
 

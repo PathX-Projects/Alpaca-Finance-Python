@@ -1,10 +1,14 @@
-from typing import Optional
+from typing import Optional, Union
+from math import floor
 
-from .util import get_entry_prices, get_web3_provider, get_vault_addresses
+from ..util import get_entry_prices, get_web3_provider, get_vault_addresses
 from ._config import DEFAULT_BSC_RPC_URL
-from .vault_contracts import DeltaNeutralVault, DeltaNeutralOracle, AutomatedVaultController, DeltaNeutralVaultGateway
+from .receipt import TransactionReceipt, build_receipt
+from .contracts import DeltaNeutralVault, DeltaNeutralOracle, AutomatedVaultController, DeltaNeutralVaultGateway
 
+from eth_abi import decode_abi
 import requests
+import web3.contract
 from web3 import Web3
 from attrdict import AttrDict
 from bep20 import BEP20Token
@@ -41,15 +45,40 @@ class AutomatedVaultPosition:
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 
-    def invest(self):
+    def do_invest(self) -> TransactionReceipt:
         raise NotImplementedError
 
-    def withdraw(self, shares: int):
-        """Withdraws the specified amount of shares from the automated vault position."""
-        return self.vault.withdraw(shares)
+    def do_withdraw(self, shares: int, pct_stable: float = None, strategy: str = "Minimize Trading") -> TransactionReceipt:
+        """
+        Withdraws the specified amount of shares from the automated vault position.
 
-    def close_position(self):
-        raise NotImplementedError
+        :param shares: The amount of share to withdraw from the vault (in share tokens) (self.shares()[0] = close position)
+        :param pct_stable: The percentage of stable token returned to the owner (.50 = 50% stable and 50% asset returned)
+        :param strategy: The strategy to use to withdraw, as shown on the webapp (Minimize Trading, Convert All)
+        """
+        assert self.shares()[0] >= shares, f"Shares owned insufficient to withdraw {shares} " \
+                                           f"({self.from_wei(shares, self.bep20_vault_token.decimals())}) shares"
+
+        if strategy.lower() == "minimize trading":
+            return self._execute(self.vault.withdraw(shares))
+        elif strategy.lower() == "convert all":
+            assert pct_stable is not None, "Please provide a stable token percentage to determine token swap"
+            assert 0.0 < pct_stable <= 1.0, "Invalid value for pct_stable parameter, must follow 0.0 < pct_stable <= 1.0"
+
+            stable_return_bps = floor(pct_stable * 10000)
+
+            return self._execute(self.gateway.withdraw(shares, stableReturnBps=stable_return_bps))
+        else:
+            raise ValueError("Invalid strategy - Options are 'Minimize Trading' or 'Convert All'")
+
+    def do_close(self, pct_stable: float = None, strategy: str = "Minimize Trading") -> TransactionReceipt:
+        """
+        Withdraws all outstanding shares from the pool and closes position.
+
+        :param pct_stable: See self.withdraw()
+        :param strategy: See self.withdraw()
+        """
+        return self.do_withdraw(shares=self.shares()[0], pct_stable=pct_stable, strategy=strategy)
 
     """ ---------------- Informational Methods (Private wallet key not required) ---------------- """
 
@@ -171,15 +200,46 @@ class AutomatedVaultPosition:
 
     """ -------------------------------- Utility Methods -------------------------------- """
 
-    def sign_and_send_tx(self):
-        pass
+    def _execute(self, function_call: web3.contract.ContractFunction) -> TransactionReceipt:
+        """
+        :param function_call: The uncalled and prepared contract method to sign and send
+        """
+        if self.owner_key is None:
+            raise ValueError("Private key is required to sign transactions")
 
-    def decode_transaction_data(self, transaction_address: Optional):
+        txn = function_call.buildTransaction({
+            "from": self.owner_address,
+            'chainId': 56,  # 56: BSC mainnet
+            # 'gas': 76335152,
+            'gasPrice': 5000000000,
+            'nonce': self.w3_provider.eth.get_transaction_count(self.owner_address),
+        })
+        print(txn)
+
+        signed_txn = self.w3_provider.eth.account.sign_transaction(
+            txn, private_key=self.owner_key
+        )
+        tx_hash = self.w3_provider.eth.send_raw_transaction(signed_txn.rawTransaction)
+
+        receipt = dict(self.w3_provider.eth.wait_for_transaction_receipt(tx_hash))
+
+        try:
+            return build_receipt(receipt)
+        except Exception as exc:
+            print(f"COULD NOT BUILD TRANSACTION RECEIPT OBJECT - {exc}")
+            # Catch case to prevent receipt from being lost if TransactionReceipt object somehow can't be built
+            return receipt
+
+    @staticmethod
+    def from_wei(amt: int, decimals: int) -> int:
+        return amt * (10 ** decimals)
+
+    def _decode_withdraw_transaction(self, transaction_address: Optional):
         """
         Returns the transaction data used to invoke the smart contract function for the underlying contract
         First fetches the transaction data for the HomoraBank.execute() function, then gets the transaction data
         for the underlying smart contract
-        :param w3_provider: The Web3.HTTPProvider object for interacting with the network
+
         :param transaction_address: The transaction address (binary or str)
         :return: (
             decoded bank function (ContractFunction, dict),
@@ -187,12 +247,44 @@ class AutomatedVaultPosition:
         )
         """
         transaction = self.w3_provider.eth.get_transaction(transaction_address)
+        print(transaction)
 
-        decoded_bank_transaction = self.vault.contract.decode_function_input(transaction.input)
+        try:
+            decoded_bank_transaction = self.vault.contract.decode_function_input(transaction.input)
+        except:
+            decoded_bank_transaction = self.gateway.contract.decode_function_input(transaction.input)
 
-        # return decoded_bank_transaction
+        decoded_calldata = decode_abi(
+            ['uint256', 'uint256'],
+            decoded_bank_transaction[1]['_data']
+        )
 
-        encoded_contract_data = decoded_bank_transaction[1]['_data']
+        return decoded_bank_transaction, decoded_calldata
 
-        return decoded_bank_transaction, self.gateway.contract.decode_function_input(encoded_contract_data)
+    def _decode_deposit_transaction(self, transaction_address: Optional):
+        """
+        Returns the transaction data used to invoke the smart contract function for the underlying contract
+        First fetches the transaction data for the HomoraBank.execute() function, then gets the transaction data
+        for the underlying smart contract
+
+        :param transaction_address: The transaction address (binary or str)
+        :return: (
+            decoded bank function (ContractFunction, dict),
+            decoded spell function (ContractFunction, dict)
+        )
+        """
+        transaction = self.w3_provider.eth.get_transaction(transaction_address)
+        print(transaction)
+
+        try:
+            decoded_bank_transaction = self.vault.contract.decode_function_input(transaction.input)
+        except:
+            decoded_bank_transaction = self.gateway.contract.decode_function_input(transaction.input)
+
+        decoded_calldata = decode_abi(
+            ["uint256"],
+            decoded_bank_transaction[1]['_data']
+        )
+
+        return decoded_bank_transaction, decoded_calldata
 

@@ -1,0 +1,17 @@
+# Using transaction 0xe098ce5033eaed74061bec59eb4a0e43903c3dc8d599ba31a1c1d4b48ae64116 as an example:
+
+# Withdraw 2 shares from vault
+
+# Permalink for param docs
+# https://github.com/alpaca-finance/bsc-alpaca-contract/blob/f24c96ddce1e414682dddf4814b84b3252ee21d2/solidity/contracts/8.10/protocol/DeltaNeutralVault.sol#L342
+
+<Function withdraw(uint256,uint256,uint256,bytes)>
+
+uint256 _shareAmount = 2000000000000000000
+uint256 _minStableTokenAmount = 48683760543520
+uint256 _minAssetTokenAmount = 401798675871529541
+
+bytes calldata _data = encode_abi(
+                            ["uint256", "uint256"],
+                            [25, 1]
+                       )

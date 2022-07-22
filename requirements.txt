@@ -2,3 +2,6 @@ attrdict
 web3
 requests
 bep20
+eth_abi
+hexbytes
+python-dotenv

@@ -1,0 +1,17 @@
+# Permalink:
+# https://github.com/alpaca-finance/bsc-alpaca-contract/blob/f24c96ddce1e414682dddf4814b84b3252ee21d2/solidity/contracts/8.10/protocol/DeltaNeutralVault.sol#L288
+
+# Reference Transaction:
+# 0xc4f6e4c194c56d09278af35512c1c2cb2545e5f94fbcb0b653f88c8f4d137da3
+
+<Function deposit(uint256,uint256,address,uint256,bytes)>
+
+uint256 _stableTokenAmount = 0
+uint256 _assetTokenAmount = 10000000000000000000  (10 BUSD)
+address _shareReceiver = 0xC9E6e248928aC18eD6b103653cBcF66d23B743C6  (My wallet address)
+uint256 _minShareReceive = 12909469727754999680  (slippage, I think)
+
+bytes calldata _data = encode_abi(
+                            ["uint256"],
+                            [25]
+                       )
