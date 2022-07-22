@@ -231,8 +231,12 @@ class AutomatedVaultPosition:
             return receipt
 
     @staticmethod
-    def from_wei(amt: int, decimals: int) -> int:
+    def to_wei(amt: int, decimals: int) -> int:
         return amt * (10 ** decimals)
+
+    @staticmethod
+    def from_wei(amt: int, decimals: int) -> int:
+        return amt / (10 ** decimals)
 
     def _decode_withdraw_transaction(self, transaction_address: Optional):
         """
