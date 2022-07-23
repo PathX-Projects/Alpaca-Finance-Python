@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Union, Optional
 from math import floor
 
 from ..util import get_entry_prices, get_web3_provider, get_vault_addresses
@@ -20,6 +20,8 @@ class AutomatedVaultPosition:
             self.w3_provider = get_web3_provider(DEFAULT_BSC_RPC_URL)
         else:
             self.w3_provider = w3_provider
+        if self.w3_provider.eth.chainId != 56:
+            raise ValueError("This package currently supports positions on the Binance Smart Chain (BSC - 56) network only")
 
         summary = self.get_vault_summary(position_key.lower())
 
@@ -45,8 +47,19 @@ class AutomatedVaultPosition:
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 
-    def do_invest(self) -> TransactionReceipt:
-        raise NotImplementedError
+    def do_invest(self, stable_token_amt: int = 0, asset_token_amt: int = 0) -> TransactionReceipt:
+        """
+        Invest the specified amount of each token into the Automated Vault.
+        Use self.asset_token and self.stable_token to identify the underlying assets.
+
+        :param stable_token_amt: The amount of stable token to deposit
+        :param asset_token_amt: The amount of asset token to deposit
+        :return:
+        """
+        assert stable_token_amt > 0 or asset_token_amt > 0, \
+            "Please provide an investment value for either the stable or asset tokens"
+
+        return self._execute(self.vault.invest(stable_token_amt, asset_token_amt, shareReceiver=self.owner_address))
 
     def do_withdraw(self, shares: int, pct_stable: float = None, strategy: str = "Minimize Trading") -> TransactionReceipt:
         """
@@ -79,6 +92,20 @@ class AutomatedVaultPosition:
         :param strategy: See self.withdraw()
         """
         return self.do_withdraw(shares=self.shares()[0], pct_stable=pct_stable, strategy=strategy)
+
+    def do_approve_deposit_token(self, token: Union[BEP20Token, str], amount: int = None) -> TransactionReceipt:
+        """
+        Approves the given token for deposit into an Automated Vault.
+
+        :param token: Optional - either the BEP20Token object, or the token address (str)
+        :param amount: The amount of token to approve, default = maximum
+        """
+        if type(token) != BEP20Token:
+            token = BEP20Token(token)
+
+        func_call = token.prepare_approve(self.address, amount)
+        return self._execute(func_call)
+
 
     """ ---------------- Informational Methods (Private wallet key not required) ---------------- """
 
@@ -214,7 +241,7 @@ class AutomatedVaultPosition:
             'gasPrice': 5000000000,
             'nonce': self.w3_provider.eth.get_transaction_count(self.owner_address),
         })
-        print(txn)
+        # print(txn)
 
         signed_txn = self.w3_provider.eth.account.sign_transaction(
             txn, private_key=self.owner_key
@@ -278,7 +305,7 @@ class AutomatedVaultPosition:
         )
         """
         transaction = self.w3_provider.eth.get_transaction(transaction_address)
-        print(transaction)
+        # print(transaction)
 
         try:
             decoded_bank_transaction = self.vault.contract.decode_function_input(transaction.input)

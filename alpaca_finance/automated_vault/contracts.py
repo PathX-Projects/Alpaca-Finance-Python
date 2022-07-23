@@ -76,8 +76,18 @@ class DeltaNeutralVault:
         self.partialCloseMinimizeStrat = {"pancakeswap": r['SharedStrategies']["Pancakeswap"]["StrategyPartialCloseMinimizeTrading"],
                                           "biswap": r['SharedStrategies']["Biswap"]["StrategyPartialCloseMinimizeTrading"]}
 
-    def invest(self) -> web3.contract.ContractFunction:
-        pass
+    def invest(self, stableTokenAmount: int, assetTokenAmount: int, shareReceiver: str) -> web3.contract.ContractFunction:
+        """Invest the specified token into the vault"""
+
+        minShareReceive = 0  # Slippage
+
+        _calldata = encode_abi(
+            ["uint256"],
+            [25]
+        )
+
+        return self.contract.functions.deposit(stableTokenAmount, assetTokenAmount, checksum(shareReceiver),
+                                               minShareReceive, _calldata)
 
     def withdraw(self, shares: int) -> web3.contract.ContractFunction:
         """
