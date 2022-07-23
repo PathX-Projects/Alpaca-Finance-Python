@@ -34,7 +34,7 @@ This package is set up to be installed using the `pip` package manager.
 
 1. Install the package using pip (you must use the git+url as this project is private and not listed on PyPi):
     ```bash
-    pip install --upgrade git+https://github.com/PathX-Projects/Alpaca-Finance-Python.git
+    pip install --upgrade alpaca-finance
     ```
     <!-- ***Note:*** You may need to provide your git credentials depending on the repository privacy settings. In the event, if you need help generating a personal access token see [here](https://catalyst.zoho.com/help/tutorials/githubbot/generate-access-token.html) -->
 
