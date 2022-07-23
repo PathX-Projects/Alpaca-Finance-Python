@@ -155,4 +155,5 @@ cython_debug/
 .DS_Store
 .idea
 testing.*
-jessie_alpaca_example.ipynb
+testing2.*
+examples/old/jessie_alpaca_example.ipynb

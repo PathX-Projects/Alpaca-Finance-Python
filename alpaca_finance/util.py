@@ -2,7 +2,7 @@ from os.path import join, abspath, dirname
 from os import getcwd, pardir
 import json
 
-from ._config import DEFAULT_BSC_RPC_URL
+from alpaca_finance.automated_vault._config import DEFAULT_BSC_RPC_URL
 
 import requests
 from web3 import Web3
@@ -17,7 +17,7 @@ def get_bsc_contract_instance(contract_address: str, abi_filename: str, w3_provi
     if w3_provider is None:
         w3_provider = get_web3_provider(DEFAULT_BSC_RPC_URL)
 
-    abi_storage_path = join(abspath(dirname(__file__)), "abi")
+    abi_storage_path = join(abspath(dirname(__file__)), "automated_vault/abi")
     with open(join(abi_storage_path, abi_filename)) as json_file:
         contract_abi = json.load(json_file)
 
@@ -57,6 +57,12 @@ def store_abi(abi_url: str, abi_filename: str, abi_path: str = None) -> None:
     """
     contract_abi = requests.get(abi_url).json()
 
-    path = join(join(dirname(__file__)), "abi", abi_filename) if abi_path is None else abi_path
+    path = join(join(dirname(__file__)), "automated_vault/abi", abi_filename) if abi_path is None else abi_path
     with open(path, "w") as json_file:
         json_file.write(json.dumps(contract_abi, indent=2))
+
+
+def get_vault_addresses(vault_address: str) -> dict:
+    for r in requests.get("https://raw.githubusercontent.com/alpaca-finance/bsc-alpaca-contract/main/.mainnet.json").json()['DeltaNeutralVaults']:
+        if r['address'].lower() == vault_address.lower():
+            return r
