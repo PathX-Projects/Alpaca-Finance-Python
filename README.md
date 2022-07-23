@@ -52,7 +52,7 @@ How to use the package
 
 1. Import the package into your Python script:
     ```python
-    from alpaca_finance.positions import AutomatedVaultPosition
+    from alpaca_finance.automated_vault import AutomatedVaultPosition
     ```
 
 2. ***(Optional)*** Create your Web3 provider object to interact with the network (By default, the BSC RPC URL is used):
