@@ -37,6 +37,7 @@ class DeltaNeutralVault:
         """
         AVAILABLE_PROTOCOLS = ["pancakeswap", "biswap"]
 
+        self.address = vault_address
         self.contract = get_bsc_contract_instance(contract_address=vault_address,
                                                   abi_filename="DeltaNeutralVault.json", w3_provider=w3_provider)
         self.protocol = protocol.lower()
@@ -141,6 +142,7 @@ class DeltaNeutralVault:
 
 class DeltaNeutralVaultGateway:
     def __init__(self, gateway_address: str, w3_provider: Web3 = None):
+        self.address = gateway_address
         self.contract = get_bsc_contract_instance(contract_address=gateway_address,
                                                   abi_filename="DeltaNeutralVaultGateway.json", w3_provider=w3_provider)
 

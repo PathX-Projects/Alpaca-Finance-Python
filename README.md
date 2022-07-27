@@ -122,7 +122,9 @@ How to use the package
 
 
     # Approve a token for deposit to the vault (only required once if never approved):
-    position.do_approve_deposit_token(<token_address> or <BEP20Token object>)
+    position.do_approve_token(<token_address> or <BEP20Token object>)
+    # Approve the vault token for withdraw if using the "Convert All" strategy (only required once if never approved):
+    position.do_approve_token(position.bep20_vault_token, _spender=position.gateway.address)
 
 
     # Invest the given amount of stable and asset token into the vault:
