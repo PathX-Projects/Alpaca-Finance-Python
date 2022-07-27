@@ -34,7 +34,7 @@ This package is set up to be installed using the `pip` package manager.
 
 1. Install the package using pip (you must use the git+url as this project is private and not listed on PyPi):
     ```bash
-    pip install --upgrade git+https://github.com/PathX-Projects/Alpaca-Finance-Python.git
+    pip install --upgrade alpaca-finance
     ```
     <!-- ***Note:*** You may need to provide your git credentials depending on the repository privacy settings. In the event, if you need help generating a personal access token see [here](https://catalyst.zoho.com/help/tutorials/githubbot/generate-access-token.html) -->
 
@@ -122,7 +122,9 @@ How to use the package
 
 
     # Approve a token for deposit to the vault (only required once if never approved):
-    position.do_approve_deposit_token(<token_address> or <BEP20Token object>)
+    position.do_approve_token(<token_address> or <BEP20Token object>)
+    # Approve the vault token for withdraw if using the "Convert All" strategy (only required once if never approved):
+    position.do_approve_token(position.bep20_vault_token, _spender=position.gateway.address)
 
 
     # Invest the given amount of stable and asset token into the vault:

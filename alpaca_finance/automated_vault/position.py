@@ -1,7 +1,7 @@
 from typing import Union, Optional
 from math import floor
 
-from ..util import get_entry_prices, get_web3_provider, get_vault_addresses
+from ..util import get_entry_prices, get_web3_provider, get_vault_addresses, checksum
 from ._config import DEFAULT_BSC_RPC_URL
 from .receipt import TransactionReceipt, build_receipt
 from .contracts import DeltaNeutralVault, DeltaNeutralOracle, AutomatedVaultController, DeltaNeutralVaultGateway
@@ -10,6 +10,7 @@ from eth_abi import decode_abi
 import requests
 import web3.contract
 from web3 import Web3
+from web3.constants import MAX_INT
 from attrdict import AttrDict
 from bep20 import BEP20Token
 
@@ -47,17 +48,32 @@ class AutomatedVaultPosition:
 
     """ ------------------ Transactional Methods (Requires private wallet key) ------------------ """
 
-    def do_invest(self, stable_token_amt: int = 0, asset_token_amt: int = 0) -> TransactionReceipt:
+    def do_invest(self, stable_token_amt: int = 0, asset_token_amt: int = 0, _approve=False) -> TransactionReceipt:
         """
         Invest the specified amount of each token into the Automated Vault.
         Use self.asset_token and self.stable_token to identify the underlying assets.
 
         :param stable_token_amt: The amount of stable token to deposit
         :param asset_token_amt: The amount of asset token to deposit
+        :param _approve: If True, approves the deposit token for spending by the vault token
         :return:
         """
         assert stable_token_amt > 0 or asset_token_amt > 0, \
             "Please provide an investment value for either the stable or asset tokens"
+
+        # Ensure that allowances match desired investment amount
+        if stable_token_amt > 0:
+            token_bal = self.stable_token.balanceOf(self.owner_address)
+            assert token_bal >= stable_token_amt, \
+                f"Insufficient funds to invest {stable_token_amt} {self.stable_token.symbol()} ({token_bal} Owned)"
+            if _approve:
+                self.do_approve_token(self.stable_token)
+        if asset_token_amt > 0:
+            token_bal = self.asset_token.balanceOf(self.owner_address)
+            assert token_bal >= asset_token_amt, \
+                f"Insufficient funds to invest {asset_token_amt} {self.asset_token.symbol()} ({token_bal} Owned)"
+            if _approve:
+                self.do_approve_token(self.asset_token)
 
         return self._execute(self.vault.invest(stable_token_amt, asset_token_amt, shareReceiver=self.owner_address))
 
@@ -68,14 +84,23 @@ class AutomatedVaultPosition:
         :param shares: The amount of share to withdraw from the vault (in share tokens) (self.shares()[0] = close position)
         :param pct_stable: The percentage of stable token returned to the owner (.50 = 50% stable and 50% asset returned)
         :param strategy: The strategy to use to withdraw, as shown on the webapp (Minimize Trading, Convert All)
+        (NOT IN USE) :param _approve: If True, force approves the vault token to be spent by either the gateway or the vault contract
         """
         assert self.shares()[0] >= shares, f"Shares owned insufficient to withdraw {shares} " \
                                            f"({self.from_wei(shares, self.bep20_vault_token.decimals())}) shares"
 
         if strategy.lower() == "minimize trading":
+            # assert self.bep20_vault_token.allowance(self.owner_address, self.vault.address) >= shares, \
+            #     f"Insufficient approval amount - Spender ({self.vault.address}) requires an allowance of {shares} " \
+            #     f"{self.bep20_vault_token.symbol()} ({self.bep20_vault_token.address})"
+
             return self._execute(self.vault.withdraw(shares))
         elif strategy.lower() == "convert all":
             assert pct_stable is not None, "Please provide a stable token percentage to determine token swap"
+            assert self.bep20_vault_token.allowance(self.owner_address, self.gateway.address) >= shares, \
+                f"Insufficient approval amount - Spender ({self.gateway.address}) requires an allowance of {shares} " \
+                f"{self.bep20_vault_token.symbol()} ({self.bep20_vault_token.address})"
+
             assert 0.0 < pct_stable <= 1.0, "Invalid value for pct_stable parameter, must follow 0.0 < pct_stable <= 1.0"
 
             stable_return_bps = floor(pct_stable * 10000)
@@ -93,17 +118,26 @@ class AutomatedVaultPosition:
         """
         return self.do_withdraw(shares=self.shares()[0], pct_stable=pct_stable, strategy=strategy)
 
-    def do_approve_deposit_token(self, token: Union[BEP20Token, str], amount: int = None) -> TransactionReceipt:
+    def do_approve_token(self, token: Union[BEP20Token, str], amount: int = None, _spender: str = None) -> TransactionReceipt:
         """
-        Approves the given token for deposit into an Automated Vault.
+        Approves the given token for usage by the Automated Vault.
 
         :param token: Optional - either the BEP20Token object, or the token address (str)
         :param amount: The amount of token to approve, default = maximum
+        :param _spender: (Should not be changed by the caller) The address to give token spending access to
         """
         if type(token) != BEP20Token:
             token = BEP20Token(token)
 
-        func_call = token.prepare_approve(self.address, amount)
+        if amount is None:
+            # Use maximum approval amount if no amount is specified
+            amount = 2 ** 256 - 1
+
+        if _spender is None:
+            _spender = self.address
+
+        func_call = token.prepare_approve(checksum(_spender), amount)
+
         return self._execute(func_call)
 
 
