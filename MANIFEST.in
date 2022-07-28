@@ -1,2 +1,2 @@
-recursive-include alpaca_finance/abi *
+recursive-include alpaca_finance/automated_vault/abi *
 include requirements.txt

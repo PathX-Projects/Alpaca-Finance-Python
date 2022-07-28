@@ -55,14 +55,16 @@ How to use the package
     from alpaca_finance.automated_vault import AutomatedVaultPosition
     ```
 
+<!--
 2. ***(Optional)*** Create your Web3 provider object to interact with the network (By default, the BSC RPC URL is used):
     ```python
     from alpaca_finance.util import get_web3_provider
 
     provider = get_web3_provider("your_rpc_url")
     ```
+-->
 
-3. Creating an [AutomatedVaultPosition](alpaca_finance/automated_vault/positions.py) instance requires the following:
+2. Creating an [AutomatedVaultPosition](alpaca_finance/automated_vault/positions.py) instance requires the following:
     - Your position key (string)
         - This key should match your position key on Alpaca Finance's webapp
         - ![demo](img/demo.png)
@@ -76,6 +78,21 @@ How to use the package
     ```python
     position = AutomatedVaultPosition(position_key="n3x-BNBBUSD-PCS1", owner_wallet_address="0x...", owner_private_key="123abc456efg789hij...")
     ```
+   
+3. How to **approve tokens**:
+    - Tokens that have never been approved on the Alpaca web interface will need to be approved programmatically
+    - The current options for token approval are as follows:
+      1. Using the `AutomatedVaultPosition.auto_token_approval` attribute:
+         ```python
+         # Set to False by default
+         # Tokens are only approved if the allowance is insufficent for the transaction
+         position.auto_token_approval = True
+         ```
+      2. Using the `AutomatedVaultPosition.do_approve_token` method:
+      
+         See the [approve_token.ipynb](examples/automated_vault/approve_token.ipynb) example file
+      
+
 4. Use your position instance to interact with Alpaca Finance:
     - For reference, see the BEP20Token class [documentation](https://github.com/hschickdevs/Python-BEP20-Token/blob/main/bep20/token.py)
     - Please view the **usage examples** under [examples/automated_vault](examples/automated_vault)
