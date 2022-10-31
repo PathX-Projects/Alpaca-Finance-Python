@@ -6,7 +6,7 @@
   <h2 align="center"><strong>Alpaca-Finance-Python</strong></h2>
   <img src="https://img.shields.io/badge/Python-3.9%2B-yellow"/>&nbsp&nbsp<img src="https://img.shields.io/badge/Supported Network-BSC-yellow"></img>
     <p align="center">
-        An unofficial Python3.9+ package that models Binance Smart Chain positions on the Alpaca Finance platform to simplify interaction with their smart contracts in your Python projects.
+        An unofficial Python3.9+ package that wraps Binance Smart Chain positions on the Alpaca Finance platform to simplify interaction with their smart contracts in your Python projects.
     </p>
     <h3><strong>Supported Position Types</strong></h3>
     <i>Automated Vaults</i><br>
