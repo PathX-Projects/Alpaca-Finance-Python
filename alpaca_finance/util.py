@@ -8,7 +8,7 @@ import requests
 from web3 import Web3
 
 
-checksum = lambda addr: Web3.toChecksumAddress(addr)
+checksum = Web3.toChecksumAddress
 
 
 def get_web3_provider(network_rpc_url: str) -> Web3:
