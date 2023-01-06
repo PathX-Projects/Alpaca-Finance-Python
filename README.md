@@ -4,7 +4,7 @@
   <a href ="https://www.alpacafinance.org//"><img src="https://pbs.twimg.com/profile_images/1481749291379081217/KGzK2UQS_400x400.png" alt="Alpaca Finance Logo" height="200"></a>
   <br></br>
   <h2 align="center"><strong>Alpaca-Finance-Python</strong></h2>
-  <img src="https://img.shields.io/badge/Python-3.9%2B-yellow"/>&nbsp&nbsp<img src="https://img.shields.io/badge/Supported Network-BSC-yellow"></img>
+  <img src="https://img.shields.io/badge/Python-3.9%2B-yellow"/>&nbsp&nbsp<img src="https://img.shields.io/badge/Supported Network-BNB-yellow"></img>
     <p align="center">
         An unofficial Python3.9+ package that wraps Binance Smart Chain positions on the Alpaca Finance platform to simplify interaction with their smart contracts in your Python projects.
     </p>
